@@ -4,7 +4,7 @@ class Usuarios {
     }
 
     agregarPersonas(id, nombre, sala) {
-        let persona = { id, nombre, sala }
+        let persona = { id, nombre, sala, imagen: Math.floor(Math.random() * 8) + 1 }
         this.personas.push(persona)
         return this.personas
     }

@@ -20,30 +20,38 @@ io.on('connection', (client) => {
         let personas = usuarios.getPersonaSala(data.sala)
 
         callback(personas)
+        client.broadcast.to(data.sala).emit('PersonaOut', enviarMensaje('Administrador', `${data.nombre} se unio al chat`, data.mensaje))
+        client.broadcast.to(data.sala).emit('listado', personas)
     })
 
+
+
     // Escuchar el cliente
-    client.on('enviarMensaje', (data) => {
+    client.on('enviarMensaje', (data, callback) => {
         let persona = usuarios.getPersona(client.id)
-        client.broadcast.to(persona.sala).emit('enviarMensaje', enviarMensaje(persona.nombre, data.mensaje));
+        client.broadcast.to(persona.sala).emit('enviarMensaje', enviarMensaje(persona.nombre, data.mensaje, persona.imagen));
+
+        callback(enviarMensaje(persona.nombre, data.mensaje, persona.imagen))
     });
 
     client.on('mensajePrivado', data => {
-        let mensaje = enviarMensaje(usuarios.getPersona(client.id).nombre, data.mensaje)
+        let persona = usuarios.getPersona(client.id)
+        let mensaje = enviarMensaje(persona.nombre, data.mensaje, persona.imagen)
         client.broadcast.to(data.destino).emit('enviarMensaje', mensaje)
     })
 
     client.on('disconnect', () => {
         let persOut = usuarios.borrarPersona(client.id)
-        client.broadcast.to(persOut.sala).emit('PersonaOut', enviarMensaje('Administrador', `${persOut.nombre} salio del chat`))
+        client.broadcast.to(persOut.sala).emit('PersonaOut', enviarMensaje('Administrador', `${persOut.nombre} salio del chat`, persOut.imagen))
         client.broadcast.to(persOut.sala).emit('listado', usuarios.getPersonaSala(persOut.sala))
     });
 });
 
-function enviarMensaje(usuario, mensaje) {
+function enviarMensaje(usuario, mensaje, imagen) {
     return {
         usuario,
         mensaje,
-        tiempo: new Date().getTime()
+        tiempo: new Date().getTime(),
+        imagen
     }
 }
